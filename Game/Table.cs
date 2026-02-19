@@ -26,8 +26,9 @@ namespace CardFool
 			//Проводим матчи
 			for (int i = 0; i < 100; i++)
 			{
-				//int result = new MTable(new MPlayer1(), new MPlayer2()).PlayGame();
-				//Results[result]++;
+				//если не будет работать - вернуть result тип int
+				var result = new MTable(new MPlayer1(), new MPlayer2()).PlayGame();
+				Results[result]++;
 			}
 
 			//Выводим результаты
@@ -140,7 +141,7 @@ namespace CardFool
 				Console.ForegroundColor = ConsoleColor.DarkRed;
 				Console.WriteLine("Атакует: " + (IsFirstAttacking ? Player1.GetName() : Player2.GetName()));
 				Console.ForegroundColor = ConsoleColor.DarkGreen;
-				Console.WriteLine("Защищается: " + (IsFirstAttacking ? Player1.GetName() : Player2.GetName()));
+				Console.WriteLine("Защищается: " + (!IsFirstAttacking ? Player1.GetName() : Player2.GetName()));
 				Console.ForegroundColor = ConsoleColor.White;
 			}
 
