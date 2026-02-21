@@ -30,12 +30,14 @@ namespace CardFool
             {
                 int reit = card.Rank; //+ (card.Suit == trump.Suit ? 100 : 0);
                 int reit1 = hand[0].Rank; //+ (hand[0].Suit == trump.Suit ? 100 : 0);
-                while (reit1 < reit)
+
+                while (reit1 < reit && ind < hand.Count)
                 {
-                    reit1 = hand[0].Rank; //+ (hand[0].Suit == trump.Suit ? 100 : 0);
+                    reit1 = hand[ind].Rank; //+ (hand[0].Suit == trump.Suit ? 100 : 0);
                     ind++;
                 }
-                hand.Insert(ind, card);
+                if (ind == hand.Count) hand.Add(card);
+                else hand.Insert(ind, card);
             }
             else hand.Add(card);
         }
@@ -93,19 +95,21 @@ namespace CardFool
         public bool Defend(List<SCardPair> table)
         {
             attack = false;
-            foreach (SCardPair pair in table)
+            for (int k = 0; k < table.Count; k++)
             {
-                if (!pair.Beaten)
+                if (!table[k].Beaten)
                 {
-                    for(int i = 0; i < hand.Count; i++)
+                    var a = table[k];   //костыль, без которого не работает
+                    for (int i = hand.Count - 1; i >= 0; i--)
                     {
-                        if (pair.SetUp(hand[i], trump.Suit))
+                        if (a.SetUp(hand[i], trump.Suit))
                         {
+                            table[k] = a;
                             hand.RemoveAt(i);
                             break;
                         }
                     }
-                    if (!pair.Beaten) return false;
+                    if (!table[k].Beaten) return false;
                 }
             }
             return true;
@@ -117,7 +121,8 @@ namespace CardFool
         {
             int ind = 0;
             bool isAdded = false;
-            while (table.Count < Math.Min(enemyCards, 6) && ind < table.Count)
+            bool f = true;
+            while (table.Count < Math.Min(enemyCards, 6) && ind < hand.Count)
             {
                 foreach (SCardPair pair in table)
                 {
@@ -126,10 +131,12 @@ namespace CardFool
                         table.Add(new SCardPair(hand[ind]));
                         hand.RemoveAt(ind);
                         isAdded = true;
+                        f = false;
                         break;
                     }
                 }
-                ind++;
+                if (f) ind++;
+                f = true;
             }
             return isAdded;
         }
@@ -138,39 +145,21 @@ namespace CardFool
         //На вход подается набор карт на столе, а также была ли успешной защита
         public void OnEndRound(List<SCardPair> table, bool IsDefenceSuccesful)
         {
-            int reqCards1 = Math.Max(0, 6 - (hand.Count - table.Count));
-            int reqCards2 = Math.Max(0, 6 - (enemyCards - table.Count));
-            if (IsDefenceSuccesful) 
+            int en1 = IsDefenceSuccesful || attack ? Math.Max(0, 6 - (hand.Count - table.Count)) : 0;
+            int en2 = IsDefenceSuccesful || !attack ? Math.Max(0, 6 - (enemyCards - table.Count)) : 0;
+
+            if (pricup >= en1 + en2 && (!attack || IsDefenceSuccesful)) enemyCards = Math.Max(6, enemyCards - table.Count);
+            else if (attack && !IsDefenceSuccesful) enemyCards += table.Count;
+            else if (pricup < en1 + en2)
             {
-                if(pricup >= reqCards1 + reqCards2)
-                {
-                    enemyCards = Math.Max(6, enemyCards - table.Count);
-                    pricup -= reqCards1 + reqCards2;
-                }
-                else
-                {
-                    
-                    if (attack)
-                        pricup = Math.Max(0, pricup - reqCards1);
-                    enemyCards -= Math.Min(0, table.Count - pricup);
-                    pricup = 0;
-                }
+                enemyCards -= table.Count;
+                if (attack) enemyCards += en2 != 0 ? Math.Max(0, pricup - en1) : 0;
+                else enemyCards += Math.Min(en2, pricup);
             }
-            else
-            {
-                if (attack)
-                {
-                    enemyCards += table.Count;
-                    pricup = Math.Min(0, pricup - reqCards1);
-                }
-                else
-                {
-                    enemyCards += Math.Min(pricup, reqCards2) - table.Count;
-                    pricup = Math.Min(0, pricup - reqCards2);
-                }
-            }
-            
-        }
+
+            if (pricup >= en1 + en2) pricup -= en1 + en2;
+            else pricup = 0;
+        }  
 
         //Установка козыря, на вход подаётся козырь, вызывается перед первой раздачей карт
         public void SetTrump(SCard NewTrump)
