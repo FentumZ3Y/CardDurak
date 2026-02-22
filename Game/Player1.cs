@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System;
 
 namespace CardFool
 {
@@ -25,21 +26,8 @@ namespace CardFool
         //Добавление карты в руку, во время добора из колоды, или взятия карт
         public void AddToHand(SCard card)
         {
-            int ind = 0;
-            if (hand.Count != 0)
-            {
-                int reit = card.Rank; //+ (card.Suit == trump.Suit ? 100 : 0);
-                int reit1 = hand[0].Rank; //+ (hand[0].Suit == trump.Suit ? 100 : 0);
-
-                while (reit1 < reit && ind < hand.Count)
-                {
-                    reit1 = hand[ind].Rank; //+ (hand[0].Suit == trump.Suit ? 100 : 0);
-                    ind++;
-                }
-                if (ind == hand.Count) hand.Add(card);
-                else hand.Insert(ind, card);
-            }
-            else hand.Add(card);
+            hand.Add(card);
+            hand = SortNoTrump(hand);
         }
 
         //Начальная атака
@@ -86,7 +74,7 @@ namespace CardFool
                 at.Add(hand[0]);
                 hand.RemoveAt(0);
             }
-            
+
             return at;
         }
 
@@ -165,6 +153,52 @@ namespace CardFool
         public void SetTrump(SCard NewTrump)
         {
             trump = NewTrump;
+        }
+
+        private List<SCard> SortWithTrump(List<SCard> cards)
+        {
+            List<SCard > result = new List<SCard>();
+            result.Add(cards[0]);
+            cards.RemoveAt(0);
+
+            foreach (var card in cards)
+            {
+                int reit = card.Rank + (card.Suit == trump.Suit ? 10 : 0);
+                int reit1 = result[0].Rank + (result[0].Suit == trump.Suit ? 10 : 0);
+                int ind = 1;
+                while (reit1 < reit && ind < result.Count)
+                {
+                    reit1 = result[ind].Rank + (result[ind].Suit == trump.Suit ? 10 : 0);
+                    ind++;
+                }
+                if (ind == result.Count) result.Add(card);
+                else result.Insert(ind, card);
+            }
+            return result;
+
+        }
+
+        private List<SCard> SortNoTrump(List<SCard> cards)
+        {
+            List<SCard> result = new List<SCard>();
+            result.Add(cards[0]);
+            cards.RemoveAt(0);
+
+            foreach (var card in cards)
+            {
+                int reit = card.Rank;
+                int reit1 = result[0].Rank;
+                int ind = 1;
+                while (reit1 < reit && ind < result.Count)
+                {
+                    reit1 = result[ind].Rank;
+                    ind++;
+                }
+                if (ind == result.Count) result.Add(card);
+                else result.Insert(ind, card);
+            }
+            return result;
+
         }
     }
 }

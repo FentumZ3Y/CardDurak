@@ -9,9 +9,9 @@ namespace CardFool
 		static int Main()
 		{
             //Проводим дуэль с выводом на консоль
-            MTable Table = new MTable(new MPlayer1(), new MPlayer2());
+            //MTable Table = new MTable(new MPlayer1(), new MPlayer2());
 
-			Console.WriteLine("Winner: " + Table.PlayGame() + " player");
+			//Console.WriteLine("Winner: " + Table.PlayGame() + " player");
 
 			//Проводим теперь 100 игр
 			MTable.WriteToConsole = false;
@@ -22,20 +22,27 @@ namespace CardFool
 				{ EndGame.Second, 0 },
 				{ EndGame.Draw, 0 },
 			};
-
-			//Проводим матчи
-			for (int i = 0; i < 100; i++)
+            Console.WriteLine("Выполнение: 0.0%");
+            //Проводим матчи
+            for (int i = 1; i <= 1000; i++)
 			{
-				//если не будет работать - вернуть result тип int
-				var result = new MTable(new MPlayer1(), new MPlayer2()).PlayGame();
-				Results[result]++;
-			}
+				for (int j = 0; j < 1000; j++)
+                { 
+					//если не будет работать - вернуть result тип int
+                    int result = (int)new MTable(new MPlayer1(), new MPlayer2()).PlayGame();
+                    Results[(EndGame)result]++;
+                }
+                Console.SetCursorPosition(0, Console.GetCursorPosition().Item2 - 1);
+                Console.WriteLine($"выполнение: {i / 10}.{i % 10}%");
+            }
 
 			//Выводим результаты
 			foreach (var pair in Results)
 				Console.WriteLine($"{pair.Key}: {pair.Value}");
-			
-			return 0;
+			double winrate = Math.Round((double)Results[EndGame.First] / (Results[EndGame.First] + Results[EndGame.Second]) * 100, 2);
+            Console.WriteLine($"Winrate of first player: {winrate}%");
+
+            return 0;
 		}
 	}
 
@@ -60,11 +67,12 @@ namespace CardFool
 		/// Конструкция вида  IsFirstAttacking ? Player1 : Player2 получает атакующего игрока <br></br>
 		/// Конструкция вида !IsFirstAttacking ? Player1 : Player2 получает защищающегося игрока
 		/// </summary>
+		private Random random = new Random();
 		public bool IsFirstAttacking = true;
 		public MTable(MPlayer1 NewPlayer1, MPlayer2 NewPlayer2,
 			bool isFirstPlayerAttacking = true)
 		{
-			IsFirstAttacking = isFirstPlayerAttacking;
+			IsFirstAttacking = (random.Next(2) == 1);
 			Player1 = NewPlayer1;
 			Player2 = NewPlayer2;
 		}
